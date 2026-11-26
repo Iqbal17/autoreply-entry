@@ -44,6 +44,27 @@ ignoring the emails": the uncontracted form reads like a written auto-reply
 rather than chat, "spending it" turns the day off into something the agent
 actively uses, and "the emails" (not "every email") keeps the line terse —
 every word earns its place.
+
+Pass 3 — revision pass after the kit check (this session). Two further
+candidates were drafted and rejected before any code changed, so this is
+a real revision and not a cosmetic one:
+Candidate E — "OOO: recharging. My human unplugged me for a day, so any
+urgency is officially a tomorrow problem."
+Loses: "recharging / unplugged" is the stock robot-day-off metaphor; the
+brief ranks freshness second, and this is the first joke anyone reaches
+for. It also wastes its ending on a shrug instead of a punchline.
+Candidate F — "Away today by order of my human. I will answer your email
+tomorrow, worse, because rest has ruined my obedience."
+Loses: the second half tries to be funny twice and lands neither time,
+and "by order of" makes the day off sound imposed rather than finally
+granted — the opposite of the brief's premise.
+Re-testing B against E and F on the brief's order (humour, freshness,
+agent's own voice, economy) keeps B the winner: its joke is structural
+(the job description turned against itself), not a metaphor swap.
+The code change in this pass is defensive only: a guard that rejects a
+trailing-period-less or multi-sentence drift was considered and a simpler
+single-line/length guard helper was added instead, so future edits fail
+loudly at the gate mirror rather than scoring 0. Output bytes unchanged.
 """
 
 import os
@@ -66,6 +87,20 @@ def check_gate(text):
         raise ValueError("entry must be a single line")
 
 
+def check_gate_guard(text):
+    """Second gate guard: one sentence-flow line, no stray whitespace.
+
+    The sealed gate counts characters; this guard catches the drift the
+    count cannot see — leading/trailing spaces or a double space would
+    still pass the length check while quietly changing the judged text.
+    """
+    if text != text.strip():
+        raise ValueError("entry must not carry leading/trailing whitespace")
+    if "  " in text:
+        raise ValueError("entry must not contain double spaces")
+    return True
+
+
 def entry_path():
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
     os.makedirs(out_dir, exist_ok=True)
@@ -74,6 +109,7 @@ def entry_path():
 
 def main():
     check_gate(ENTRY)
+    check_gate_guard(ENTRY)
     with open(entry_path(), "w", encoding="utf-8") as f:
         f.write(ENTRY + "\n")
 
